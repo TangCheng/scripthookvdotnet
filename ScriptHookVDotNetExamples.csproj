@@ -35,7 +35,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="examples\ExitVehicle.cs" />
+    <Compile Include="examples\GPS.cs" />
     <Compile Include="examples\IndicatorControl.cs" />
+    <Compile Include="examples\TrafficLight.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>copy $(TargetDir)\$(TargetFileName) "D:\Game\Grand Theft Auto V\scripts" /Y</PostBuildEvent>
+  </PropertyGroup>
 </Project>
