@@ -65,6 +65,16 @@ namespace GTA
 			float get();
 			void set(float value);
 		}
+		property float Pitch
+		{
+			float get();
+			void set(float value);
+		}
+		property float Roll
+		{
+			float get();
+			void set(float value);
+		}
 		property int Health
 		{
 			int get();

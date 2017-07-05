@@ -12,28 +12,94 @@ using System.Diagnostics;
 
 public class GPS : Script
 {
+    const float PI = 3.14159f;
+    struct ImuData
+    {
+        public ulong timestamp;
+
+        // Batch - 1
+        public ushort time_ms;                 // milliseconds into the minute in GPS time. (0~59999)
+
+        public double acc_x;                   // acceleration X in vehicle body frame. unit: m/s^2
+        public double acc_y;                   // acceleration Y in vehicle body frame. unit: m/s^2
+        public double acc_z;                   // acceleration Z in vehicle body frame. unit: m/s^2
+
+        public double ang_x;                   // angular rate X in vehicle body frame. unit: rad/s
+        public double ang_y;                   // angular rate Y in vehicle body frame. unit: rad/s
+        public double ang_z;                   // angular rate Z in vehicle body frame. unit: rad/s
+
+        public byte nav_status;                // navigation status
+
+        // Batch - 2
+        public double latitude;                // latitude of the IMU. unit: rad
+        public double longitude;               // longitude of the IMU. unit: rad
+        public float altitude;                 // altitude of the IMU. unit: m
+
+        public double vel_n;                   // north velocity. unit: m/s
+        public double vel_e;                   // east velocity. unit: m/s
+        public double vel_d;                   // down velocity. unit: m/s
+
+        public double heading;                 // heading. unit: rad (-PI~PI)
+        public double pitch;                   // pitch. unit: rad (-PI/2~PI/2)
+        public double roll;                    // roll. unit: rad (-PI~PI)
+
+        // Batch - 3
+        public byte channel;                   // determine what information is sent
+        // Channel 0
+        public uint time_mm;                   // time in minutes since GPS began (midnight 06/01/1980). invalid when value < 1000
+        public byte satellites;                // number of GPS satellites tracked by the primary GPS receiver. invalid when value = 255
+        public byte pos_mode;                  // position mode of primary GPS. invalid when value = 255
+                                               //byte vel_mode;                // velocity mode of primary GPS. invalid when value = 255
+                                               //byte orien_mode;              // orientation mode of dual antenna systems. invalid when value = 255
+                                               // Channel 3
+        public ushort n_pos_accuracy;          // north postion accuracy. valid when age < 150. unit : mm
+        public ushort e_pos_accuracy;          // east postion accuracy. valid when age < 150. unit : mm
+        public ushort d_pos_accuracy;          // down postion accuracy. valid when age < 150. unit : mm
+        public byte age3;                      // age
+        // Channel 4
+        public ushort n_vel_accuracy;          // valid when age < 150. unit : mm/s
+        public ushort e_vel_accuracy;          // valid when age < 150. unit : mm/s
+        public ushort d_vel_accuracy;          // valid when age < 150. unit : mm/s
+        public byte age4;                      // age
+        // Channel 5
+        public ushort heading_accuracy;        // valid when age < 150. unit : 1e-5 rad
+        public ushort pitch_accuracy;          // valid when age < 150. unit : 1e-5 rad
+        public ushort roll_accuracy;           // valid when age < 150. unit : 1e-5 rad
+        public byte age5;                      // age
+        // Channel 6
+        public short gyro_bias_x;              // valid when age < 150. unit : 5e-6 rad
+        public short gyro_bias_y;              // valid when age < 150. unit : 5e-6 rad
+        public short gyro_bias_z;              // valid when age < 150. unit : 5e-6 rad
+        public byte age6;                      // age
+        // Channel 7
+        public short acc_bias_x;               // valid when age < 150. unit : 0.1 mm/s^2
+        public short acc_bias_y;               // valid when age < 150. unit : 0.1 mm/s^2
+        public short acc_bias_z;               // valid when age < 150. unit : 0.1 mm/s^2
+        public byte age7;                      // age
+    };
+
     const int PANEL_WIDTH = 900;
     const int PANEL_HEIGHT = 20;
     Color backColor = Color.FromArgb(100, 255, 255, 255);
     Color textColor = Color.Black; // just change this to whatever color you want
 
-    UIContainer container;
-    UIText text;
+    UIContainer container_first;
+    UIText text_first;
+    UIContainer container_second;
+    UIText text_second;
 
-    string coordStr = "";
-    string nameStr = "";
-    bool enteringText = false;
-    UIText nameText;
-    const int controlIndex = 1;
+    ImuData imu_data;
 
     public GPS()
     {
         UI.Notify("Loaded GPS.cs");
 
-        container = new UIContainer(new Point(UI.WIDTH / 2 - PANEL_WIDTH / 2, 0), new Size(PANEL_WIDTH, PANEL_HEIGHT), backColor);
-        text = new UIText("", new Point(PANEL_WIDTH / 2, 0), 0.42f, textColor, GTA.Font.Pricedown, true);
-        container.Items.Add(text);
-
+        container_first = new UIContainer(new Point(UI.WIDTH / 2 - PANEL_WIDTH / 2, 0), new Size(PANEL_WIDTH, PANEL_HEIGHT), backColor);
+        container_second = new UIContainer(new Point(UI.WIDTH / 2 - PANEL_WIDTH / 2, PANEL_HEIGHT), new Size(PANEL_WIDTH, PANEL_HEIGHT), backColor);
+        text_first = new UIText("", new Point(PANEL_WIDTH / 2, 0), 0.42f, textColor, GTA.Font.Pricedown, true);
+        text_second = new UIText("", new Point(PANEL_WIDTH / 2, 0), 0.42f, textColor, GTA.Font.Pricedown, true);
+        container_first.Items.Add(text_first);
+        container_second.Items.Add(text_second);
         // attach time methods 
         Tick += OnTick;
     }
@@ -55,15 +121,27 @@ public class GPS : Script
                 speed *= 3.6f;
             }
 
-            text.Caption = String.Format("{0}    x:{1}    y:{2}    z:{3}    angle:{4}    velocity:{5}", 
+            imu_data.timestamp = (ulong)date.Ticks;
+            imu_data.time_ms = (ushort)date.Millisecond;
+
+            imu_data.heading = PI - (player.Character.Heading * PI / 180);
+            imu_data.pitch = player.Character.Pitch * PI / 180;
+            imu_data.roll = player.Character.Roll * PI / 180;
+
+            text_first.Caption = String.Format("{0}.{5}    x:{1}    y:{2}    z:{3}    velocity:{4}", 
                 date.ToString(), 
                 pos.X.ToString("0.000"),
                 pos.Y.ToString("0.000"), 
                 pos.Z.ToString("0.000"), 
-                heading.ToString("0.000"), 
-                speed.ToString("0.00 km/h"));
+                speed.ToString("0.00 km/h"),
+                imu_data.time_ms.ToString("000"));
+            text_second.Caption = String.Format("Heading:{0}    Pitch:{1}    Roll:{2}",
+                imu_data.heading.ToString("0.00"),
+                imu_data.pitch.ToString("0.00"),
+                imu_data.roll.ToString("0.00"));
             // draw
-            container.Draw();
+            container_first.Draw();
+            container_second.Draw();
         }
     }
 }

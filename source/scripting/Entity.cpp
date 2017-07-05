@@ -65,6 +65,22 @@ namespace GTA
 	{
 		Native::Function::Call<float>(Native::Hash::SET_ENTITY_HEADING, Handle, value);
 	}
+	float Entity::Pitch::get()
+	{
+		return Native::Function::Call<float>(Native::Hash::GET_ENTITY_PITCH, Handle);
+	}
+	void Entity::Pitch::set(float value)
+	{
+		Native::Function::Call<float>(Native::Hash::GET_ENTITY_PITCH, Handle, value);
+	}
+	float Entity::Roll::get()
+	{
+		return Native::Function::Call<float>(Native::Hash::GET_ENTITY_ROLL, Handle);
+	}
+	void Entity::Roll::set(float value)
+	{
+		Native::Function::Call<float>(Native::Hash::GET_ENTITY_ROLL, Handle, value);
+	}
 	int Entity::Health::get()
 	{
 		return Native::Function::Call<int>(Native::Hash::GET_ENTITY_HEALTH, Handle) - 100;
