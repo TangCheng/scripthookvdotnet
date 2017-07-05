@@ -87,6 +87,10 @@ public class GPS : Script
     UIText text_first;
     UIContainer container_second;
     UIText text_second;
+    UIContainer container_third;
+    UIText text_third;
+    UIContainer container_fouth;
+    UIText text_fouth;
 
     ImuData imu_data;
 
@@ -96,10 +100,16 @@ public class GPS : Script
 
         container_first = new UIContainer(new Point(UI.WIDTH / 2 - PANEL_WIDTH / 2, 0), new Size(PANEL_WIDTH, PANEL_HEIGHT), backColor);
         container_second = new UIContainer(new Point(UI.WIDTH / 2 - PANEL_WIDTH / 2, PANEL_HEIGHT), new Size(PANEL_WIDTH, PANEL_HEIGHT), backColor);
+        container_third = new UIContainer(new Point(UI.WIDTH / 2 - PANEL_WIDTH / 2, PANEL_HEIGHT * 2), new Size(PANEL_WIDTH, PANEL_HEIGHT), backColor);
+        container_fouth = new UIContainer(new Point(UI.WIDTH / 2 - PANEL_WIDTH / 2, PANEL_HEIGHT * 3), new Size(PANEL_WIDTH, PANEL_HEIGHT), backColor);
         text_first = new UIText("", new Point(PANEL_WIDTH / 2, 0), 0.42f, textColor, GTA.Font.Pricedown, true);
         text_second = new UIText("", new Point(PANEL_WIDTH / 2, 0), 0.42f, textColor, GTA.Font.Pricedown, true);
+        text_third = new UIText("", new Point(PANEL_WIDTH / 2, 0), 0.42f, textColor, GTA.Font.Pricedown, true);
+        text_fouth = new UIText("", new Point(PANEL_WIDTH / 2, 0), 0.42f, textColor, GTA.Font.Pricedown, true);
         container_first.Items.Add(text_first);
         container_second.Items.Add(text_second);
+        container_third.Items.Add(text_third);
+        container_fouth.Items.Add(text_fouth);
         // attach time methods 
         Tick += OnTick;
     }
@@ -114,15 +124,31 @@ public class GPS : Script
             float heading = player.Character.Heading;
             DateTime date = World.CurrentDate;
             float speed = 0.0f;
+            Vector3 velocity = player.Character.Velocity;
+            Vector3 rotation_velocity = player.Character.RotationVelocity;
             Vehicle v = Game.Player.Character.CurrentVehicle;
             if (v != null)
             {
                 speed = v.Speed;
                 speed *= 3.6f;
+                velocity = v.Velocity;
+                rotation_velocity = v.RotationVelocity;
             }
 
             imu_data.timestamp = (ulong)date.Ticks;
             imu_data.time_ms = (ushort)date.Millisecond;
+
+            imu_data.ang_x = rotation_velocity.X;
+            imu_data.ang_y = rotation_velocity.Y;
+            imu_data.ang_z = rotation_velocity.Z;
+
+            imu_data.latitude = pos.X;
+            imu_data.longitude = pos.Y;
+            imu_data.altitude = pos.Z;
+
+            imu_data.vel_e = velocity.X;
+            imu_data.vel_n = velocity.Y;
+            imu_data.vel_d = velocity.Z;
 
             imu_data.heading = PI - (player.Character.Heading * PI / 180);
             imu_data.pitch = player.Character.Pitch * PI / 180;
@@ -139,9 +165,19 @@ public class GPS : Script
                 imu_data.heading.ToString("0.00"),
                 imu_data.pitch.ToString("0.00"),
                 imu_data.roll.ToString("0.00"));
+            text_third.Caption = String.Format("vel_e:{0}    vel_n:{1}    vel_d:{2}",
+                imu_data.vel_e.ToString("0.00"),
+                imu_data.vel_n.ToString("0.00"),
+                imu_data.vel_d.ToString("0.00"));
+            text_fouth.Caption = String.Format("ang_x:{0}    ang_y:{1}    ang_z:{2}",
+                imu_data.ang_x.ToString("0.00"),
+                imu_data.ang_y.ToString("0.00"),
+                imu_data.ang_z.ToString("0.00"));
             // draw
             container_first.Draw();
             container_second.Draw();
+            container_third.Draw();
+            container_fouth.Draw();
         }
     }
 }

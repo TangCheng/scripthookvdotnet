@@ -210,6 +210,11 @@ namespace GTA
 			Math::Vector3 get();
 			void set(Math::Vector3 value);
 		}
+		virtual property Math::Vector3 RotationVelocity
+		{
+			Math::Vector3 get();
+			void set(Math::Vector3 value);
+		}
 		property Math::Vector3 UpVector
 		{
 			Math::Vector3 get();
