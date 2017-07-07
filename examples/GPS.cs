@@ -83,14 +83,9 @@ public class GPS : Script
     Color backColor = Color.FromArgb(100, 255, 255, 255);
     Color textColor = Color.Black; // just change this to whatever color you want
 
-    UIContainer container_first;
-    UIText text_first;
-    UIContainer container_second;
-    UIText text_second;
-    UIContainer container_third;
-    UIText text_third;
-    UIContainer container_fouth;
-    UIText text_fouth;
+    List<UIContainer> containers = new List<UIContainer>();
+    List<UIText> texts = new List<UIText>();
+    int container_cnt = 5;
 
     ImuData imu_data;
 
@@ -98,18 +93,15 @@ public class GPS : Script
     {
         UI.Notify("Loaded GPS.cs");
 
-        container_first = new UIContainer(new Point(UI.WIDTH / 2 - PANEL_WIDTH / 2, 0), new Size(PANEL_WIDTH, PANEL_HEIGHT), backColor);
-        container_second = new UIContainer(new Point(UI.WIDTH / 2 - PANEL_WIDTH / 2, PANEL_HEIGHT), new Size(PANEL_WIDTH, PANEL_HEIGHT), backColor);
-        container_third = new UIContainer(new Point(UI.WIDTH / 2 - PANEL_WIDTH / 2, PANEL_HEIGHT * 2), new Size(PANEL_WIDTH, PANEL_HEIGHT), backColor);
-        container_fouth = new UIContainer(new Point(UI.WIDTH / 2 - PANEL_WIDTH / 2, PANEL_HEIGHT * 3), new Size(PANEL_WIDTH, PANEL_HEIGHT), backColor);
-        text_first = new UIText("", new Point(PANEL_WIDTH / 2, 0), 0.42f, textColor, GTA.Font.Pricedown, true);
-        text_second = new UIText("", new Point(PANEL_WIDTH / 2, 0), 0.42f, textColor, GTA.Font.Pricedown, true);
-        text_third = new UIText("", new Point(PANEL_WIDTH / 2, 0), 0.42f, textColor, GTA.Font.Pricedown, true);
-        text_fouth = new UIText("", new Point(PANEL_WIDTH / 2, 0), 0.42f, textColor, GTA.Font.Pricedown, true);
-        container_first.Items.Add(text_first);
-        container_second.Items.Add(text_second);
-        container_third.Items.Add(text_third);
-        container_fouth.Items.Add(text_fouth);
+        for (int i = 0; i < container_cnt; i++)
+        {
+            UIContainer container = new UIContainer(new Point(UI.WIDTH / 2 - PANEL_WIDTH / 2, PANEL_HEIGHT * i), new Size(PANEL_WIDTH, PANEL_HEIGHT), backColor);
+            UIText text = new UIText("", new Point(PANEL_WIDTH / 2, 0), 0.42f, textColor, GTA.Font.Pricedown, true);
+            container.Items.Add(text);
+            containers.Add(container);
+            texts.Add(text);
+        }
+
         // attach time methods 
         Tick += OnTick;
     }
@@ -146,6 +138,10 @@ public class GPS : Script
             imu_data.longitude = pos.Y;
             imu_data.altitude = pos.Z;
 
+            imu_data.acc_x = (Math.Abs(velocity.X) - Math.Abs(imu_data.vel_e)) / 1.0f;
+            imu_data.acc_y = (Math.Abs(velocity.Y) - Math.Abs(imu_data.vel_n)) / 1.0f;
+            imu_data.acc_z = (Math.Abs(velocity.Z) - Math.Abs(imu_data.vel_d)) / 1.0f;
+
             imu_data.vel_e = velocity.X;
             imu_data.vel_n = velocity.Y;
             imu_data.vel_d = velocity.Z;
@@ -154,30 +150,34 @@ public class GPS : Script
             imu_data.pitch = player.Character.Pitch * PI / 180;
             imu_data.roll = player.Character.Roll * PI / 180;
 
-            text_first.Caption = String.Format("{0}.{5}    x:{1}    y:{2}    z:{3}    velocity:{4}", 
+            texts[0].Caption = String.Format("{0}    x:{1}    y:{2}    z:{3}    velocity:{4}", 
                 date.ToString(), 
                 pos.X.ToString("0.000"),
                 pos.Y.ToString("0.000"), 
                 pos.Z.ToString("0.000"), 
-                speed.ToString("0.00 km/h"),
-                imu_data.time_ms.ToString("000"));
-            text_second.Caption = String.Format("Heading:{0}    Pitch:{1}    Roll:{2}",
+                speed.ToString("0.00 km/h"));
+            texts[1].Caption = String.Format("Heading:{0}    Pitch:{1}    Roll:{2}",
                 imu_data.heading.ToString("0.00"),
                 imu_data.pitch.ToString("0.00"),
                 imu_data.roll.ToString("0.00"));
-            text_third.Caption = String.Format("vel_e:{0}    vel_n:{1}    vel_d:{2}",
+            texts[2].Caption = String.Format("vel_e:{0}    vel_n:{1}    vel_d:{2}    speed:{3}",
                 imu_data.vel_e.ToString("0.00"),
                 imu_data.vel_n.ToString("0.00"),
-                imu_data.vel_d.ToString("0.00"));
-            text_fouth.Caption = String.Format("ang_x:{0}    ang_y:{1}    ang_z:{2}",
+                imu_data.vel_d.ToString("0.00"),
+                (velocity.Length() * 3.6f).ToString("0.00"));
+            texts[3].Caption = String.Format("ang_x:{0}    ang_y:{1}    ang_z:{2}",
                 imu_data.ang_x.ToString("0.00"),
                 imu_data.ang_y.ToString("0.00"),
                 imu_data.ang_z.ToString("0.00"));
+            texts[4].Caption = String.Format("acc_x:{0}    acc_y:{1}    acc_z:{2}",
+                imu_data.acc_x.ToString("0.00"),
+                imu_data.acc_y.ToString("0.00"),
+                imu_data.acc_z.ToString("0.00"));
             // draw
-            container_first.Draw();
-            container_second.Draw();
-            container_third.Draw();
-            container_fouth.Draw();
+            foreach (UIContainer container in containers)
+            {
+                container.Draw();
+            }
         }
     }
 }
