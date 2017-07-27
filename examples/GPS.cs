@@ -174,10 +174,10 @@ public class GPS : Script
                 imu_data.acc_y.ToString("0.00"),
                 imu_data.acc_z.ToString("0.00"));
             // draw
-            foreach (UIContainer container in containers)
-            {
-                container.Draw();
-            }
+            //foreach (UIContainer container in containers)
+            //{
+            //    container.Draw();
+            //}
         }
     }
 }
